@@ -32,6 +32,8 @@ from pathlib import Path
 import cv2
 import torch
 import torch.backends.cudnn as cudnn
+import pickle
+
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLOv5 root directory
@@ -151,6 +153,10 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
             imc = im0.copy() if save_crop else im0  # for save_crop
             annotator = Annotator(im0, line_width=line_thickness, example=str(names))
+            
+            objectPoints = []
+            objectBoxes = []
+            
             if len(det):
                 # Rescale boxes from img_size to im0 size
                 det[:, :4] = scale_coords(im.shape[2:], det[:, :4], im0.shape).round()
@@ -159,24 +165,43 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                 for c in det[:, -1].unique():
                     n = (det[:, -1] == c).sum()  # detections per class
                     s += f"{n} {names[int(c)]}{'s' * (n > 1)}, "  # add to string
+                   
 
                 # Write results
                 for *xyxy, conf, cls in reversed(det):
+                    xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4))).view(-1).tolist()  #  xywh
+
+                    #LOGGER.info(f'yo {point}')
                     if save_txt:  # Write to file
                         xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
                         line = (cls, *xywh, conf) if save_conf else (cls, *xywh)  # label format
+                        
                         with open(txt_path + '.txt', 'a') as f:
                             f.write(('%g ' * len(line)).rstrip() % line + '\n')
 
                     if save_img or save_crop or view_img:  # Add bbox to image
+                        #LOGGER.info(f'box added')
                         c = int(cls)  # integer class
                         label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
-                        annotator.box_label(xyxy, label, color=colors(c, True))
+                        point = (int(xyxy[2]), int(xyxy[3]))
+                        objectPoints.append(point)
+                        objectBoxes.append(xyxy)
+                        #LOGGER.info(f'object point: {point}')
+                        #to change the point you have to go to point_label also to display it differently
+                        annotator.point_label(xyxy, label, color=colors(c, True))
                         if save_crop:
                             save_one_box(xyxy, imc, file=save_dir / 'crops' / names[c] / f'{p.stem}.jpg', BGR=True)
 
             # Print time (inference-only)
+            LOGGER.info(f'Coordinates of each object: {objectPoints}')
+            #LOGGER.info(f'Bounding boxes of each object: {objectBoxes}')
+            
             LOGGER.info(f'{s}Done. ({t3 - t2:.3f}s)')
+            
+            
+            with open( str(save_dir / p.name)+'.pickle', 'wb') as handle:
+                pickle.dump(objectPoints, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            LOGGER.info(f'file saved')
 
             # Stream results
             im0 = annotator.result()
@@ -248,6 +273,7 @@ def parse_opt():
 
 
 def main(opt):
+    #LOGGER.info(f'hello')
     check_requirements(exclude=('tensorboard', 'thop'))
     run(**vars(opt))
 
