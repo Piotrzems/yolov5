@@ -87,6 +87,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
     # Directories
     save_dir = increment_path(Path(project) / name, exist_ok=exist_ok)  # increment run
+    save_dir_static = Path(project) / name
     (save_dir / 'labels' if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
 
     # Load model
@@ -148,6 +149,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
             p = Path(p)  # to Path
             save_path = str(save_dir / p.name)  # im.jpg
+            save_path_static = str(save_dir_static / p.name)
             txt_path = str(save_dir / 'labels' / p.stem) + ('' if dataset.mode == 'image' else f'_{frame}')  # im.txt
             s += '%gx%g ' % im.shape[2:]  # print string
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
@@ -199,7 +201,8 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             LOGGER.info(f'{s}Done. ({t3 - t2:.3f}s)')
             
             
-            with open( str(save_dir / p.name)+'.pickle', 'wb') as handle:
+            with open( str(save_dir_static / p.name)+'.pickle', 'wb') as handle:
+            #with open(str(save_dir_static)+'/points'+'.pickle', 'wb') as handle:  #/points.pickle'
                 pickle.dump(objectPoints, handle, protocol=pickle.HIGHEST_PROTOCOL)
             LOGGER.info(f'file saved')
 
@@ -212,7 +215,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             # Save results (image with detections)
             if save_img:
                 if dataset.mode == 'image':
-                    cv2.imwrite(save_path, im0)
+                    cv2.imwrite(save_path_static, im0)
                 else:  # 'video' or 'stream'
                     if vid_path[i] != save_path:  # new video
                         vid_path[i] = save_path
@@ -233,7 +236,8 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
     LOGGER.info(f'Speed: %.1fms pre-process, %.1fms inference, %.1fms NMS per image at shape {(1, 3, *imgsz)}' % t)
     if save_txt or save_img:
         s = f"\n{len(list(save_dir.glob('labels/*.txt')))} labels saved to {save_dir / 'labels'}" if save_txt else ''
-        LOGGER.info(f"Results saved to {colorstr('bold', save_dir)}{s}")
+        
+        LOGGER.info(f"Results saved to {colorstr('bold', save_dir_static)}{s}")
     if update:
         strip_optimizer(weights)  # update model (to fix SourceChangeWarning)
 
