@@ -206,6 +206,11 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                 pickle.dump(objectPoints, handle, protocol=pickle.HIGHEST_PROTOCOL)
             LOGGER.info(f'file saved')
 
+            with open( str(save_dir_static / p.name)+'rectangles.pickle', 'wb') as handle:
+            #with open(str(save_dir_static)+'/points'+'.pickle', 'wb') as handle:  #/points.pickle'
+                pickle.dump(objectBoxes, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            LOGGER.info(f'file saved')
+
             # Stream results
             im0 = annotator.result()
             if view_img:
