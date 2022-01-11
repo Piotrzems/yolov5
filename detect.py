@@ -186,8 +186,13 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                         c = int(cls)  # integer class
                         label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
                         point = (int(xyxy[2]), int(xyxy[3]))
+                        point2 = (int(xyxy[0]), int(xyxy[1]))
                         objectPoints.append(point)
-                        objectBoxes.append(xyxy)
+                        box = []
+                        box.append(point)
+                        box.append(point2)
+                        objectBoxes.append(box)
+                        LOGGER.info(f'Coordinates of each object: {box}')
                         #LOGGER.info(f'object point: {point}')
                         #to change the point you have to go to point_label also to display it differently
                         annotator.point_label(xyxy, label, color=colors(c, True))
@@ -207,7 +212,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             LOGGER.info(f'file saved')
 
             with open( str(save_dir_static / p.name)+'rectangles.pickle', 'wb') as handle:
-            #with open(str(save_dir_static)+'/points'+'.pickle', 'wb') as handle:  #/points.pickle'
+            
                 pickle.dump(objectBoxes, handle, protocol=pickle.HIGHEST_PROTOCOL)
             LOGGER.info(f'file saved')
 
