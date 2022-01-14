@@ -185,14 +185,15 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                         #LOGGER.info(f'box added')
                         c = int(cls)  # integer class
                         label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
-                        point = (int(xyxy[2]), int(xyxy[3]))
-                        point2 = (int(xyxy[0]), int(xyxy[1]))
+                        point = (int(xyxy[2]), int(xyxy[3]), 1) # To make the coords in 3D
+                        point2 = (int(xyxy[0]), int(xyxy[1]), 1)
                         objectPoints.append(point)
                         box = []
                         box.append(point)
                         box.append(point2)
+                       
                         objectBoxes.append(box)
-                        LOGGER.info(f'Coordinates of each object: {box}')
+                        #LOGGER.info(f'Coordinates of each object: {box}')
                         #LOGGER.info(f'object point: {point}')
                         #to change the point you have to go to point_label also to display it differently
                         annotator.point_label(xyxy, label, color=colors(c, True))
@@ -205,9 +206,10 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             
             LOGGER.info(f'{s}Done. ({t3 - t2:.3f}s)')
             
-            
+            LOGGER.info(f'heyyyyyyyyyyyyyyy')
             with open( str(save_dir_static / p.name)+'.pickle', 'wb') as handle:
             #with open(str(save_dir_static)+'/points'+'.pickle', 'wb') as handle:  #/points.pickle'
+                LOGGER.info(f'Saved to::: {save_dir_static} {p.name}.pickle')
                 pickle.dump(objectPoints, handle, protocol=pickle.HIGHEST_PROTOCOL)
             LOGGER.info(f'file saved')
 
